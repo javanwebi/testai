@@ -1,0 +1,384 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-primary: #E06518;
+  --color-brand-hover: #C95210;
+  --color-brand-accent: #E06518;
+  --color-brand-dark: #2B313A;
+  --color-text-main: #55565A;
+  --color-text-muted: #777A7D;
+  --color-bg-main: #FFFFFF;
+  --color-bg-section: #DEE2E5;
+  --color-bg-card: #FFFFFF;
+  --color-border-subtle: #CBD2D8;
+}
+
+@layer base {
+  :root {
+    --bg-main: #FFFFFF;
+    --bg-section: #DEE2E5;
+    --bg-section-subtle: #E8ECEF;
+    --bg-card: #FFFFFF;
+    --bg-dark: #2B313A;
+    --text-primary: #55565A;
+    --text-secondary: #777A7D;
+    --heading-primary: #55565A;
+    --btn-primary: #E06518;
+    --btn-hover: #C95210;
+    --border-color: #CBD2D8;
+    --icon-normal: #55565A;
+    --icon-accent: #E06518;
+    --ai-primary: #55565A;
+    --ai-accent: #E06518;
+  }
+
+  * {
+    font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    border-color: var(--border-color);
+  }
+
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    direction: rtl;
+    font-feature-settings: "ss01" on, "cv01" on;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--heading-primary);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+}
+
+/* Custom button styles according to brand tokens */
+.btn-atlas-primary {
+  background-color: #E06518;
+  color: #FFFFFF;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-atlas-primary:hover {
+  background-color: #C95210;
+}
+
+.btn-atlas-secondary {
+  background-color: #FFFFFF;
+  color: #55565A;
+  border: 1px solid #CBD2D8;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-atlas-secondary:hover {
+  background-color: #DEE2E5;
+  color: #E06518;
+  border-color: #E06518;
+}
+
+/* AI Specialized Component Styles (#55565A + #E06518) */
+.ai-atlas-badge {
+  background: linear-gradient(135deg, rgba(85, 86, 90, 0.08) 0%, rgba(224, 101, 24, 0.12) 100%);
+  color: #55565A;
+  border: 1px solid rgba(224, 101, 24, 0.28);
+}
+
+.ai-atlas-container {
+  background-color: #FFFFFF;
+  border: 1px solid #CBD2D8;
+  position: relative;
+}
+
+.ai-atlas-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #55565A 0%, #E06518 50%, #55565A 100%);
+  border-radius: 9999px 9999px 0 0;
+}
+
+/* Section styling tokens */
+.section-surface {
+  background-color: #DEE2E5;
+}
+
+.card-surface {
+  background-color: #FFFFFF;
+  border: 1px solid #CBD2D8;
+}
+
+/* Custom subtle scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #DEE2E5;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #CBD2D8;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #777A7D;
+}
+
+@keyframes heroProgress {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+/* ======================================================== */
+/* AI FORZA CINEMATIC AUTONOMOUS IDLE ANIMATIONS            */
+/* Brand: #E06518 (Primary), #55565A (Secondary), #FFFFFF   */
+/* ======================================================== */
+
+@keyframes aiCoreBreathe {
+  0%, 100% {
+    transform: scale(0.985);
+    opacity: 0.82;
+    filter: drop-shadow(0 0 16px rgba(224, 101, 24, 0.45));
+  }
+  50% {
+    transform: scale(1.02);
+    opacity: 1;
+    filter: drop-shadow(0 0 32px rgba(224, 101, 24, 0.9)) drop-shadow(0 0 65px rgba(224, 101, 24, 0.45));
+  }
+}
+
+@keyframes aiPulseRing {
+  0% {
+    transform: translate(-50%, -50%) scale(0.75);
+    opacity: 0.65;
+  }
+  50% {
+    opacity: 0.35;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2.1);
+    opacity: 0;
+  }
+}
+
+@keyframes aiHeadInternalGlow {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scaleY(0.96);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scaleY(1.04);
+  }
+}
+
+@keyframes aiEnergyConduitSlow {
+  0% {
+    stroke-dashoffset: 400;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes aiEnergyConduitReverse {
+  0% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: 400;
+  }
+}
+
+@keyframes aiWireframeShimmer {
+  0% {
+    opacity: 0.04;
+    transform: translateY(-80%);
+  }
+  50% {
+    opacity: 0.16;
+  }
+  100% {
+    opacity: 0.04;
+    transform: translateY(80%);
+  }
+}
+
+@keyframes aiAtmosphericHaze {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.58;
+    transform: scale(1.03);
+  }
+}
+
+@keyframes aiRefineryFlicker {
+  0%, 100% {
+    opacity: 0.85;
+  }
+  35% {
+    opacity: 0.98;
+  }
+  65% {
+    opacity: 0.80;
+  }
+}
+
+@keyframes aiScrollIndicatorFloat {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 0.65;
+  }
+  50% {
+    transform: translateY(4px);
+    opacity: 1;
+  }
+}
+
+.animate-ai-core-breathe {
+  animation: aiCoreBreathe 7.5s ease-in-out infinite;
+}
+
+.animate-ai-pulse-ring-1 {
+  animation: aiPulseRing 6.5s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+.animate-ai-pulse-ring-2 {
+  animation: aiPulseRing 6.5s cubic-bezier(0.16, 1, 0.3, 1) infinite 3.25s;
+}
+
+.animate-ai-head-glow {
+  animation: aiHeadInternalGlow 6s ease-in-out infinite;
+}
+
+.animate-ai-conduit-slow {
+  animation: aiEnergyConduitSlow 9s linear infinite;
+}
+
+.animate-ai-conduit-reverse {
+  animation: aiEnergyConduitReverse 11s linear infinite;
+}
+
+.animate-ai-shimmer {
+  animation: aiWireframeShimmer 10s ease-in-out infinite;
+}
+
+.animate-ai-atmosphere {
+  animation: aiAtmosphericHaze 12s ease-in-out infinite;
+}
+
+.animate-ai-refinery-lights {
+  animation: aiRefineryFlicker 8s ease-in-out infinite;
+}
+
+.animate-ai-scroll-float {
+  animation: aiScrollIndicatorFloat 3s ease-in-out infinite;
+}
+
+@keyframes aiOrganicPulseBranch {
+  0%, 100% {
+    opacity: 0.25;
+    transform: scale(0.97);
+  }
+  50% {
+    opacity: 0.65;
+    transform: scale(1.03);
+  }
+}
+
+@keyframes aiFaceSeamPulse {
+  0%, 100% {
+    opacity: 0.4;
+    filter: drop-shadow(0 0 3px rgba(224, 101, 24, 0.4));
+  }
+  50% {
+    opacity: 0.9;
+    filter: drop-shadow(0 0 8px rgba(224, 101, 24, 0.95)) drop-shadow(0 0 14px rgba(255, 140, 0, 0.7));
+  }
+}
+
+@keyframes aiIndustrialBeaconPulse {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+.animate-ai-organic-pulse {
+  animation: aiOrganicPulseBranch 8s ease-in-out infinite;
+}
+
+.animate-ai-face-seam {
+  animation: aiFaceSeamPulse 5.5s ease-in-out infinite;
+}
+
+.animate-ai-beacon {
+  animation: aiIndustrialBeaconPulse 4s ease-in-out infinite;
+}
+
+
+
+/* ===== AI FORZA particle voice-call experience ===== */
+.ai-wave-bar {
+  width: 3px;
+  border-radius: 9999px;
+  transform-origin: center;
+  animation: aiWave 0.9s ease-in-out infinite;
+}
+@keyframes aiWave {
+  0%, 100% { transform: scaleY(0.35); }
+  50% { transform: scaleY(1); }
+}
+
+.ai-fade-up {
+  animation: aiFadeUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes aiFadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+.ai-caret::after {
+  content: '';
+  display: inline-block;
+  width: 2px;
+  height: 1.1em;
+  margin-inline-start: 4px;
+  vertical-align: -2px;
+  background: #22d3ee;
+  animation: aiBlink 0.9s steps(1) infinite;
+}
+@keyframes aiBlink {
+  50% { opacity: 0; }
+}
+
+.ai-mic-listening {
+  animation: aiMicPulse 1.4s ease-in-out infinite;
+}
+@keyframes aiMicPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.45); }
+  50% { box-shadow: 0 0 0 14px rgba(239, 68, 68, 0); }
+}
+
+.ai-entry-glow {
+  animation: aiEntryGlow 2.4s ease-in-out infinite;
+}
+@keyframes aiEntryGlow {
+  0%, 100% { box-shadow: 0 0 24px rgba(34, 211, 238, 0.35); }
+  50% { box-shadow: 0 0 54px rgba(34, 211, 238, 0.6); }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "Remix Remix Remix Remix هایپر صنعت اطلس",
+  "description": "پلتفرم تخصصی فروش، پخش و نمایندگی آنلاین تسمه‌های صنعتی و قطعات کارخانجات کاشی، سرامیک و نساجی - تأسیس ۱۳۶۶ یزد",
+  "requestFramePermissions": [
+    "microphone",
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

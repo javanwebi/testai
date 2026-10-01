@@ -1,0 +1,13 @@
+{
+  "appId": "ir.javanweb.hyperatlas",
+  "appName": "هایپر صنعت اطلس",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false,
+    "webContentsDebuggingEnabled": false
+  }
+}

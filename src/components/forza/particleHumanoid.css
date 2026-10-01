@@ -1,0 +1,215 @@
+:root {
+  color-scheme: dark;
+  --background: #101012;
+  --foreground: #b9babd;
+  --primary: #e06518;
+  --primary-foreground: #101012;
+  --accent: #2a2b2e;
+  --accent-foreground: #ffffff;
+  --ring: #e06518;
+  --radius: 9px;
+}
+
+.experience {
+  width: 100%;
+  height: 100%;
+  min-height: 280px;
+  background: #101012;
+  position: relative;
+  overflow: hidden;
+}
+
+.particle-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.corner-mark {
+  position: absolute;
+  top: 28px;
+  left: 28px;
+  width: 32px;
+  height: 30px;
+  border: 1px solid #55565a80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  opacity: 0.6;
+  border-radius: 5px;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.corner-mark i {
+  width: 2px;
+  height: 12px;
+  background: #e06518;
+  box-shadow: 0 0 7px #e06518;
+  display: block;
+}
+
+.corner-mark i:nth-child(2) {
+  height: 17px;
+}
+
+.corner-mark i:nth-child(4) {
+  height: 7px;
+}
+
+.telemetry {
+  position: absolute;
+  right: 28px;
+  top: 38px;
+  font: 400 14px "IBM Plex Mono", monospace;
+  letter-spacing: 0.08em;
+  color: #8b8c90;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  opacity: 0.65;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.telemetry span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #e06518;
+  box-shadow: 0 0 9px #e06518;
+}
+
+.controls {
+  position: absolute;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  z-index: 30;
+}
+
+.experience:hover .controls,
+.experience:focus-within .controls {
+  opacity: 1;
+}
+
+.control-caption {
+  font: 400 14px ui-monospace, monospace;
+  white-space: nowrap;
+  letter-spacing: 0.10em;
+  color: #b9babd;
+}
+
+.control-caption b {
+  font-weight: 400;
+  color: #e06518;
+}
+
+.control-buttons {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 5px;
+  border: 1px solid #55565a;
+  border-radius: 14px;
+  background: #151517d9;
+  backdrop-filter: blur(12px);
+  color: #d4d4d6;
+}
+
+.control-buttons button {
+  cursor: pointer;
+}
+
+.control-buttons button:focus-visible {
+  outline: 2px solid #e06518;
+  outline-offset: 3px;
+}
+
+.clean .corner-mark,
+.clean .telemetry {
+  display: none;
+}
+
+@media (hover: none) {
+  .controls {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 600px) {
+  .corner-mark {
+    top: 19px;
+    left: 19px;
+  }
+  .telemetry {
+    top: 27px;
+    right: 19px;
+    font-size: 14px;
+    letter-spacing: 0;
+  }
+  .controls {
+    bottom: 28px;
+  }
+  .control-caption {
+    font-size: 14px;
+    letter-spacing: 0.04em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}
+
+.ui-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  gap: 8px;
+  white-space: nowrap;
+  cursor: pointer;
+  height: 36px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: 500 14px system-ui, sans-serif;
+  transition: background 0.18s, color 0.18s;
+}
+
+.ui-button-icon {
+  width: 36px;
+  padding: 0;
+}
+
+.ui-button svg {
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+}
+
+.ui-button:hover {
+  background: #2a2b2e;
+  color: #ffffff;
+}
+
+.ui-button:focus-visible {
+  outline: 2px solid #e06518;
+  outline-offset: 3px;
+}
+
+.ui-button:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}

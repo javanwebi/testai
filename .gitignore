@@ -1,0 +1,21 @@
+node_modules/
+.cache/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+bun.lock*
+
+# Generated mobile-optimized WebP assets (scripts/optimize-images.mjs).
+# Recreated on every build via the "prebuild" npm script — do not commit.
+src/assets/images/mobile/
+src/assets/imagesproducts/mobile/
+
+# Local Android SDK path / signing material — never commit these
+android/local.properties
+android/keystore.properties
+*.jks
+*.keystore

@@ -1,0 +1,272 @@
+name: Build APK
+
+# ---------------------------------------------------------------------------
+# Builds the React web app, wraps it with Capacitor into a native Android
+# project and produces an installable release APK. The APK is then committed
+# back into this repository under `apk/` so it can be downloaded straight from
+# the repo (and attached to the run as an artifact).
+#
+# Trigger it from: Actions → "Build APK" → Run workflow.
+# ---------------------------------------------------------------------------
+
+on:
+  push:
+    branches: [main]
+    # Do not re-run when the workflow commits its own output back into apk/.
+    paths-ignore:
+      - 'apk/**'
+      - '**.md'
+  workflow_dispatch:
+    inputs:
+      version_name:
+        description: 'APK version name (e.g. 1.0.1)'
+        required: false
+        default: '1.0.0'
+      api_base_url:
+        description: 'Backend URL for the AI endpoints (e.g. https://atlassanat.ir). Leave empty to use the repository variable VITE_API_BASE_URL.'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apk-build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build release APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      # Capacitor's generated capacitor.build.gradle compiles with
+      # sourceCompatibility/targetCompatibility = VERSION_21, so the build
+      # needs a JDK 21 toolchain (AGP 8.13 also requires 17+).
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install required Android SDK components
+        run: |
+          set -e
+          SDKMANAGER=""
+          for candidate in "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
+                           "$ANDROID_HOME/cmdline-tools/bin/sdkmanager" \
+                           "$ANDROID_HOME/tools/bin/sdkmanager"; do
+            if [ -x "$candidate" ]; then SDKMANAGER="$candidate"; break; fi
+          done
+          if [ -n "$SDKMANAGER" ]; then
+            yes | "$SDKMANAGER" --licenses > /dev/null 2>&1 || true
+            "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0" "platform-tools" \
+              > /dev/null 2>&1 || echo "::warning::Could not pre-install SDK 36; relying on the preinstalled SDK."
+          else
+            echo "::warning::sdkmanager not found; relying on the preinstalled SDK."
+          fi
+
+      - name: Resolve build configuration
+        id: cfg
+        run: |
+          VERSION_NAME="${{ inputs.version_name }}"
+          [ -z "$VERSION_NAME" ] && VERSION_NAME="${{ vars.APK_VERSION_NAME }}"
+          [ -z "$VERSION_NAME" ] && VERSION_NAME="1.0.0"
+
+          # Android's versionCode is a 32-bit int, so the run number (which can
+          # be much larger) is reduced modulo 2e9 to stay in range.
+          RUN_NUMBER="${{ github.run_number }}"
+          VERSION_CODE="${{ vars.APK_VERSION_CODE }}"
+          if [ -z "$VERSION_CODE" ]; then
+            VERSION_CODE=$(( RUN_NUMBER % 2000000000 ))
+          fi
+
+          API_BASE="${{ inputs.api_base_url }}"
+          [ -z "$API_BASE" ] && API_BASE="${{ vars.VITE_API_BASE_URL }}"
+
+          echo "version_name=$VERSION_NAME"  >> "$GITHUB_OUTPUT"
+          echo "version_code=$VERSION_CODE"  >> "$GITHUB_OUTPUT"
+          echo "api_base=$API_BASE"          >> "$GITHUB_OUTPUT"
+
+          echo "APK version : $VERSION_NAME ($VERSION_CODE)"
+          echo "API base URL: ${API_BASE:-<not set — AI endpoints will be disabled in the APK>}"
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Optimize images for mobile
+        run: npm run optimize:images
+
+      - name: Build web bundle
+        run: npm run build
+        env:
+          VITE_API_BASE_URL: ${{ steps.cfg.outputs.api_base }}
+
+      - name: Sync web assets into the Android project
+        run: npx cap sync android
+
+      - name: Decode release keystore (optional)
+        id: keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            KEYSTORE_DIR="$RUNNER_TEMP/keystore"
+            mkdir -p "$KEYSTORE_DIR"
+            printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$KEYSTORE_DIR/release.keystore"
+            {
+              echo "ANDROID_KEYSTORE_PATH=$KEYSTORE_DIR/release.keystore"
+              echo "ANDROID_KEYSTORE_PASSWORD=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}"
+              echo "ANDROID_KEY_ALIAS=${{ secrets.ANDROID_KEY_ALIAS }}"
+              echo "ANDROID_KEY_PASSWORD=${{ secrets.ANDROID_KEY_PASSWORD }}"
+            } >> "$GITHUB_ENV"
+            echo "enabled=true"  >> "$GITHUB_OUTPUT"
+            echo "Release build will be signed with the provided keystore."
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "No ANDROID_KEYSTORE_BASE64 secret — the APK will be signed with the debug key (installable, but not publishable)."
+          fi
+
+      - name: Build release APK
+        working-directory: android
+        env:
+          APK_VERSION_NAME: ${{ steps.cfg.outputs.version_name }}
+          APK_VERSION_CODE: ${{ steps.cfg.outputs.version_code }}
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Inspect the built APK
+        working-directory: android
+        run: |
+          APK="app/build/outputs/apk/release/app-release.apk"
+          if [ ! -f "$APK" ]; then
+            echo "::error::APK was not produced at $APK"
+            ls -la app/build/outputs/apk/release/ 2>/dev/null || true
+            exit 1
+          fi
+          ls -lh "$APK"
+          AAPT="$(ls -d "$ANDROID_HOME"/build-tools/*/aapt2 2>/dev/null | sort -V | tail -1)"
+          if [ -n "$AAPT" ]; then
+            "$AAPT" dump badging "$APK" 2>/dev/null | grep -E "^package|application-label:|sdkVersion|targetSdkVersion" || true
+          fi
+          echo "sha256=$(sha256sum "$APK" | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+          echo "size_bytes=$(stat -c%s "$APK")" >> "$GITHUB_OUTPUT"
+        id: apk
+
+      - name: Publish APK into the apk/ folder
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.cfg.outputs.version_name }}"
+          CODE="${{ steps.cfg.outputs.version_code }}"
+          APK_SRC="android/app/build/outputs/apk/release/app-release.apk"
+
+          mkdir -p apk
+          APK_DST="apk/hyperatlas-v${VERSION}.apk"
+          cp "$APK_SRC" "$APK_DST"
+
+          # Fixed, stable URL for "the latest build".
+          cp "$APK_SRC" "apk/hyperatlas-latest.apk"
+
+          SIGNED="debug key"
+          [ "${{ steps.keystore.outputs.enabled }}" = "true" ] && SIGNED="release keystore"
+
+          cat > apk/build-info.txt <<EOF
+          هایپر صنعت اطلس — Android APK
+          ==============================
+
+          فایل APK        : apk/hyperatlas-v${VERSION}.apk
+          آخرین نسخه      : apk/hyperatlas-latest.apk
+          نسخه            : ${VERSION} (versionCode ${CODE})
+          شناسه اپ         : ir.javanweb.hyperatlas
+          امضا            : ${SIGNED}
+          حجم             : $(du -h "$APK_DST" | cut -f1)
+          SHA-256         : ${{ steps.apk.outputs.sha256 }}
+          تاریخ ساخت       : $(date -u '+%Y-%m-%d %H:%M:%S UTC')
+          کامیت سورس       : ${GITHUB_SHA::7}
+          لینک اجرای ساخت   : ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          EOF
+
+          cat > apk/latest.json <<EOF
+          {
+            "app": "هایپر صنعت اطلس",
+            "package": "ir.javanweb.hyperatlas",
+            "versionName": "${VERSION}",
+            "versionCode": ${CODE},
+            "signedWith": "${SIGNED}",
+            "sizeBytes": ${{ steps.apk.outputs.size_bytes }},
+            "sha256": "${{ steps.apk.outputs.sha256 }}",
+            "builtAt": "$(date -u '+%Y-%m-%dT%H:%M:%SZ')",
+            "commit": "${GITHUB_SHA::7}",
+            "runUrl": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+            "apkUrl": "${{ github.server_url }}/${{ github.repository }}/raw/main/apk/hyperatlas-latest.apk"
+          }
+          EOF
+
+          # Keep only the newest few versioned APKs so the repository stays small.
+          ls -1t apk/hyperatlas-v*.apk 2>/dev/null | tail -n +6 | xargs -r rm -f
+
+          echo "APK_DST=$APK_DST" >> "$GITHUB_OUTPUT"
+
+      - name: Upload APK as a run artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hyperatlas-apk-v${{ steps.cfg.outputs.version_name }}
+          path: |
+            apk/hyperatlas-latest.apk
+            apk/hyperatlas-v${{ steps.cfg.outputs.version_name }}.apk
+            apk/build-info.txt
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Commit the APK back into the repository
+        run: |
+          set -euo pipefail
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add apk/
+
+          if git diff --cached --quiet; then
+            echo "No APK changes to commit."
+            exit 0
+          fi
+
+          git commit -m "chore(apk): build v${{ steps.cfg.outputs.version_name }} (versionCode ${{ steps.cfg.outputs.version_code }}) [skip ci]"
+
+          # Rebase on top of any commit that landed while we were building.
+          for attempt in 1 2 3; do
+            if git pull --rebase --autostash origin main && git push origin HEAD:main; then
+              echo "APK pushed to main."
+              exit 0
+            fi
+            echo "Push attempt $attempt failed, retrying..."
+            sleep 5
+          done
+
+          echo "::error::Could not push the APK after 3 attempts."
+          exit 1
+
+      - name: Summary
+        run: |
+          {
+            echo "### ✅ APK ساخته شد"
+            echo ""
+            echo "| | |"
+            echo "|---|---|"
+            echo "| نسخه | \`${{ steps.cfg.outputs.version_name }}\` (code ${{ steps.cfg.outputs.version_code }}) |"
+            echo "| دانلود | [apk/hyperatlas-latest.apk](${{ github.server_url }}/${{ github.repository }}/blob/main/apk/hyperatlas-latest.apk) |"
+            echo "| حجم | ${{ steps.apk.outputs.size_bytes }} bytes |"
+            echo "| SHA-256 | \`${{ steps.apk.outputs.sha256 }}\` |"
+            echo "| امضا | ${{ steps.keystore.outputs.enabled == 'true' && 'release keystore' || 'debug key' }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
